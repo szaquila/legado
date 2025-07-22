@@ -87,6 +87,13 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initMenu() {
         binding.toolBar.setOnMenuItemClickListener(this)
         binding.toolBar.inflateMenu(R.menu.book_group_manage)
+        // 添加按作者分组菜单项
+        binding.toolBar.menu.add(R.string.group_by_author)
+            .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+            .setOnMenuItemClickListener {
+                groupByAuthor()
+                true
+            }
         binding.toolBar.menu.applyTint(requireContext())
     }
 
@@ -101,6 +108,44 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
             }
         }
         return true
+    }
+
+    /**
+     * 按作者分组
+     */
+    private fun groupByAuthor() {
+        lifecycleScope.launch {
+            val books = appDb.bookDao.all
+            val authorGroups = books.groupBy { it.getRealAuthor() }
+
+            authorGroups.forEach { (author, books) ->
+                if (author.isNotBlank()) {
+                    // 检查是否已有该作者分组
+                    var group = appDb.bookGroupDao.getByName(author)
+                    if (group == null && appDb.bookGroupDao.canAddGroup) {
+                        // 创建新分组
+                        group = BookGroup(
+                            groupId = appDb.bookGroupDao.getUnusedId(),
+                            groupName = author,
+                            order = appDb.bookGroupDao.maxOrder + 1
+                        )
+                        appDb.bookGroupDao.insert(group)
+                    }
+
+                    // 将书籍添加到分组
+                    group?.let {
+                        books.forEach { book ->
+                            book.group = book.group or it.groupId
+                            appDb.bookDao.update(book)
+                        }
+                    }
+                }
+            }
+
+            // 刷新分组列表
+            initData()
+            toastOnUi("已按作者完成分组")
+        }
     }
 
     private inner class GroupAdapter(context: Context) :
