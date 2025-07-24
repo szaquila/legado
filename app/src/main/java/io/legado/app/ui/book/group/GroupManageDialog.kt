@@ -88,12 +88,8 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
         binding.toolBar.setOnMenuItemClickListener(this)
         binding.toolBar.inflateMenu(R.menu.book_group_manage)
         // 添加按作者分组菜单项
-        binding.toolBar.menu.add(R.string.group_by_author)
-            .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-            .setOnMenuItemClickListener {
-                groupByAuthor()
-                true
-            }
+        val groupByAuthorItem = binding.toolBar.menu.add(R.string.group_by_author)
+        groupByAuthorItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         binding.toolBar.menu.applyTint(requireContext())
     }
 
@@ -104,6 +100,12 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
                     showDialogFragment(GroupEditDialog())
                 } else {
                     toastOnUi("分组已达上限(64个)")
+                }
+            }
+            // 处理按作者分组菜单项点击
+            0 -> { // menu.add 返回的itemId为0（未指定id时）
+                if (item.title == getString(R.string.group_by_author)) {
+                    groupByAuthor()
                 }
             }
         }

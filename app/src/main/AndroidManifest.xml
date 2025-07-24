@@ -527,6 +527,7 @@
     </application>
 
     <queries>
+        <package android:name="io.legado.app" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="*" />
