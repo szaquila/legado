@@ -87,9 +87,10 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initMenu() {
         binding.toolBar.setOnMenuItemClickListener(this)
         binding.toolBar.inflateMenu(R.menu.book_group_manage)
-        // 添加按作者分组菜单项
         val groupByAuthorItem = binding.toolBar.menu.add(R.string.group_by_author)
         groupByAuthorItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        val deleteAuthorGroupItem = binding.toolBar.menu.add(R.string.delete_author_groups)
+        deleteAuthorGroupItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         binding.toolBar.menu.applyTint(requireContext())
     }
 
@@ -102,14 +103,41 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
                     toastOnUi("分组已达上限(64个)")
                 }
             }
-            // 处理按作者分组菜单项点击
-            0 -> { // menu.add 返回的itemId为0（未指定id时）
+            // R.string.delete_author_groups -> {
+            //     deleteAuthorGroups()
+            //     return true
+            // }
+            // R.string.group_by_author -> {
+            //     groupByAuthor()
+            //     return true
+            // }
+            0 -> {
                 if (item.title == getString(R.string.group_by_author)) {
                     groupByAuthor()
+                } else if (item.title == getString(R.string.delete_author_groups)) {
+                    deleteAuthorGroups()
                 }
             }
         }
         return true
+    }
+
+    private fun deleteAuthorGroups() {
+        lifecycleScope.launch {
+            val allGroups = appDb.bookGroupDao.all
+            val authorGroups = allGroups.filter { it.groupName.isNotBlank() && isAuthorGroup(it) }
+            authorGroups.forEach {
+                appDb.bookGroupDao.delete(it)
+            }
+            initData()
+            toastOnUi("已删除所有作者分组")
+        }
+    }
+
+    private fun isAuthorGroup(group: BookGroup): Boolean {
+        // 判断是否为作者分组的逻辑，例如名称是否符合某种规则
+        // 这里简单示例为名称不为空且不为默认分组名
+        return group.groupName.isNotBlank() && group.groupName != "默认分组"
     }
 
     /**
@@ -121,7 +149,7 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
             val authorGroups = books.groupBy { it.getRealAuthor() }
 
             authorGroups.forEach { (author, books) ->
-                if (author.isNotBlank()) {
+                if (books.size > 1 && author.isNotBlank()) {
                     // 检查是否已有该作者分组
                     var group = appDb.bookGroupDao.getByName(author)
                     if (group == null && appDb.bookGroupDao.canAddGroup) {

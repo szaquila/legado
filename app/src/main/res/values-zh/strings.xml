@@ -583,6 +583,7 @@
     <string name="select_image">选择图片</string>
     <string name="group_manage">分组管理</string>
     <string name="group_by_author">按作者分组</string>
+    <string name="delete_author_groups">删除作者分组</string>
     <string name="group_select">分组选择</string>
     <string name="group_edit">编辑分组</string>
     <string name="move_to_group">移入分组</string>
