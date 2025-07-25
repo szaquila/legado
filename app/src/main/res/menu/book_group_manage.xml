@@ -10,9 +10,4 @@
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
 
-    <item
-        android:id="@+id/menu_delete_author_groups"
-        android:title="@string/delete_author_groups"
-        app:showAsAction="never" />
-
 </menu>

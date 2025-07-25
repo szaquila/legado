@@ -103,14 +103,6 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
                     toastOnUi("分组已达上限(64个)")
                 }
             }
-            // R.string.delete_author_groups -> {
-            //     deleteAuthorGroups()
-            //     return true
-            // }
-            // R.string.group_by_author -> {
-            //     groupByAuthor()
-            //     return true
-            // }
             0 -> {
                 if (item.title == getString(R.string.group_by_author)) {
                     groupByAuthor()
@@ -125,19 +117,13 @@ class GroupManageDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun deleteAuthorGroups() {
         lifecycleScope.launch {
             val allGroups = appDb.bookGroupDao.all
-            val authorGroups = allGroups.filter { it.groupName.isNotBlank() && isAuthorGroup(it) }
+            val authorGroups = allGroups.filter { it.groupId > -1 }
             authorGroups.forEach {
                 appDb.bookGroupDao.delete(it)
             }
             initData()
-            toastOnUi("已删除所有作者分组")
+            toastOnUi("已删除所有自定义分组")
         }
-    }
-
-    private fun isAuthorGroup(group: BookGroup): Boolean {
-        // 判断是否为作者分组的逻辑，例如名称是否符合某种规则
-        // 这里简单示例为名称不为空且不为默认分组名
-        return group.groupName.isNotBlank() && group.groupName != "默认分组"
     }
 
     /**
